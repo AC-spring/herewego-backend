@@ -1,4 +1,4 @@
 package service;
 
-public class service {1
+public class service {
 }
