@@ -1,5 +1,6 @@
 package com.example.webserver.config;
 
+import com.example.webserver.dto.TokenDto; // 💡 TokenDto 임포트
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -26,14 +27,17 @@ import java.util.stream.Collectors;
 public class JwtTokenProvider {
 
     private final String secret;
-    private final long tokenExpiration;
+    // 🚨 액세스/리프레시 만료 시간 필드 분리
+    private final long accessTokenExpiration;
+    private final long refreshTokenExpiration;
     private SecretKey key;
 
-
     public JwtTokenProvider(@Value("${jwt.secret}") String secret,
-                            @Value("${jwt.expiration}") long tokenExpiration) {
+                            @Value("${jwt.access-token-expiration}") long accessTokenExpiration, // 💡 생성자 매개변수 추가
+                            @Value("${jwt.refresh-token-expiration}") long refreshTokenExpiration) { // 💡 생성자 매개변수 추가
         this.secret = secret;
-        this.tokenExpiration = tokenExpiration;
+        this.accessTokenExpiration = accessTokenExpiration;
+        this.refreshTokenExpiration = refreshTokenExpiration;
     }
 
     @PostConstruct
@@ -42,28 +46,44 @@ public class JwtTokenProvider {
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    // JWT 생성
-    public String generateToken(Authentication authentication) {
+    /**
+     * Authentication 객체를 받아 액세스 토큰과 리프레시 토큰을 모두 생성합니다.
+     */
+    public TokenDto generateTokenDto(Authentication authentication) {
         String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
 
-        Date now = new Date();
-        Date validity = new Date(now.getTime() + tokenExpiration);
+        long now = (new Date()).getTime();
 
-        return Jwts.builder()
+        // 1. 액세스 토큰 생성 (만료 시간 짧게)
+        Date accessTokenExpiresIn = new Date(now + accessTokenExpiration);
+        String accessToken = Jwts.builder()
                 .subject(authentication.getName())
                 .claim("auth", authorities)
-                .issuedAt(now)
-                .expiration(validity)
+                .issuedAt(new Date(now))
+                .expiration(accessTokenExpiresIn)
                 .signWith(key, Jwts.SIG.HS256)
                 .compact();
+
+        // 2. 리프레시 토큰 생성 (만료 시간 길게)
+        String refreshToken = Jwts.builder()
+                .expiration(new Date(now + refreshTokenExpiration))
+                .signWith(key, Jwts.SIG.HS256)
+                .compact();
+
+        return TokenDto.builder()
+                .grantType("Bearer")
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .accessTokenExpiresIn(accessTokenExpiresIn.getTime())
+                .build();
     }
 
-    // 토큰 -> 인증 객체
+    // JWT 토큰을 복호화하여 인증 객체 반환 (JJWT v0.12.x 최신 문법 유지)
     public Authentication getAuthentication(String token) {
         Claims claims = Jwts.parser()
-                .verifyWith(key)
+                .verifyWith((SecretKey) key)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
@@ -78,25 +98,20 @@ public class JwtTokenProvider {
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }
 
-    // 유효성 검증
+    // 토큰 유효성 검증 (JJWT v0.12.x 최신 문법 유지)
     public boolean validateToken(String token) {
         try {
             Jwts.parser()
-                    .verifyWith(key)
+                    .verifyWith((SecretKey) key)
                     .build()
                     .parseSignedClaims(token);
-
             return true;
-
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
             log.info("잘못된 JWT 서명입니다.");
-
         } catch (ExpiredJwtException e) {
             log.info("만료된 JWT 토큰입니다.");
-
         } catch (UnsupportedJwtException e) {
             log.info("지원되지 않는 JWT 토큰입니다.");
-
         } catch (IllegalArgumentException e) {
             log.info("JWT 토큰이 잘못되었습니다.");
         }

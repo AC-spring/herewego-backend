@@ -1,6 +1,7 @@
 package com.example.webserver.controller;
 
-import com.example.webserver.dto.LoginRequestDto; // 💡 추가
+import com.example.webserver.dto.LoginRequestDto;
+import com.example.webserver.dto.TokenDto; // 💡 TokenDto 임포트 추가
 import com.example.webserver.dto.UserRequestDto;
 import com.example.webserver.dto.UserResponseDto;
 import com.example.webserver.service.AuthService;
@@ -23,14 +24,16 @@ public class AuthController {
     }
 
     // -----------------------------------------------------------------
-    // 🔑 POST /api/v1/auth/login 요청 처리
+    // 🔑 POST /api/v1/auth/login 요청 처리 (TokenDto 반환)
     // -----------------------------------------------------------------
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody @Valid LoginRequestDto loginRequest) {
-        // 로그인 성공 시 JWT 토큰 문자열 반환
-        String token = authService.login(loginRequest);
+    // 🚨 반환 타입을 String에서 TokenDto로 변경
+    public ResponseEntity<TokenDto> login(@RequestBody @Valid LoginRequestDto loginRequest) {
 
-        // 토큰을 응답 본문에 담아 클라이언트에게 전달
-        return ResponseEntity.ok(token);
+        // 💡 TokenDto 반환
+        TokenDto tokenDto = authService.login(loginRequest);
+
+        // TokenDto를 응답 본문에 담아 클라이언트에게 전달
+        return ResponseEntity.ok(tokenDto);
     }
 }
