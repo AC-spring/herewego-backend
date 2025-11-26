@@ -2,12 +2,14 @@ package com.example.webserver.service;
 
 import com.example.webserver.config.JwtTokenProvider;
 import com.example.webserver.dto.LoginRequestDto;
-import com.example.webserver.dto.TokenDto; // 💡 TokenDto 임포트 추가
+import com.example.webserver.dto.TokenDto;
+
 import com.example.webserver.dto.UserRequestDto;
 import com.example.webserver.dto.UserResponseDto;
 import com.example.webserver.entity.User;
-
+import com.example.webserver.service.DuplicateUsernameException; // 가정한 예외
 import com.example.webserver.repository.UserRepository;
+import io.jsonwebtoken.Claims; // ✨ 추가: JWT Claims
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -48,12 +50,7 @@ public class AuthService {
     // ----------------------------------------------------
     // 2. 로그인 메서드 (Login)
     // ----------------------------------------------------
-    /**
-     * 사용자 인증을 수행하고, 성공하면 Access/Refresh 토큰을 발급합니다.
-     * @param loginRequest 로그인 요청 DTO (ID, Password)
-     * @return 발급된 TokenDto
-     */
-    // 🚨 반환 타입을 String에서 TokenDto로 변경
+    @Transactional
     public TokenDto login(LoginRequestDto loginRequest) {
 
         // 1. ID/Password 기반으로 인증 토큰 객체 생성
@@ -62,10 +59,86 @@ public class AuthService {
                 loginRequest.getPassword()
         );
 
-        // 2. 실제 인증 시도 및 비밀번호 검증
+        // 2. 실제 인증 시도 및 비밀번호 검증 (Custom UserDetailsService 호출)
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 
-        // 3. 💡 액세스/리프레시 토큰 2종 생성 및 반환
-        return jwtTokenProvider.generateTokenDto(authentication);
+        // 3. 액세스/리프레시 토큰 2종 생성
+        TokenDto tokenDto = jwtTokenProvider.generateTokenDto(authentication);
+
+        // 4. ✨ DB 저장: Refresh Token만 해당 사용자 엔티티에 저장
+        User user = userRepository.findByLoginUserId(loginRequest.getLoginUserId())
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다.")); // 2단계에서 이미 찾았지만 안전을 위해 다시 조회
+
+        user.updateRefreshToken(tokenDto.getRefreshToken());
+        userRepository.save(user);
+
+        return tokenDto;
+    }
+
+    // ----------------------------------------------------
+    // ✨ 3. 토큰 재발급 메서드 (Reissue)
+    // ----------------------------------------------------
+    /**
+     * Refresh Token을 검증하고 새로운 Access Token을 발급합니다.
+     * @param tokenRequestDto 클라이언트가 보낸 Refresh Token
+     * @return 새로운 Access/Refresh Token 쌍
+     */
+    @Transactional
+    public TokenDto reissue(TokenDto tokenRequestDto) {
+        String clientRefreshToken = tokenRequestDto.getRefreshToken();
+
+        // 1. Refresh Token 유효성 및 만료 여부 검증
+        if (!jwtTokenProvider.validateToken(clientRefreshToken)) {
+            // RT가 만료되었거나 서명이 유효하지 않음 (Case 1)
+            throw new RuntimeException("Refresh Token이 유효하지 않거나 만료되었습니다. 재로그인이 필요합니다.");
+        }
+
+        // 2. DB 일치성 검증 (핵심 보안 단계)
+        User user = userRepository.findByRefreshToken(clientRefreshToken)
+                .orElseThrow(() -> new RuntimeException("DB에 저장된 Refresh Token과 일치하지 않습니다. 재로그인이 필요합니다."));
+
+        // 3. 새 Access Token 생성
+        // RT의 Claims를 파싱하여 사용자 정보(Subject)를 얻고 Authentication 객체 재생성
+        Claims claims = jwtTokenProvider.getClaims(clientRefreshToken);
+
+        // 사용자 ID와 권한 정보로 Authentication 객체를 새로 만듭니다.
+        // UserDetails 구현체 User 객체를 사용하여 Authorities를 가져오는 로직 필요
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                claims.getSubject(), // loginUserId
+                null, // 비밀번호는 필요 없음
+                user.getAuthorities() // DB에서 가져온 User 객체의 권한 사용
+        );
+
+        TokenDto newTokenDto = jwtTokenProvider.generateTokenDto(authentication);
+
+        // (선택적) Refresh Token Rotation 전략: 새로운 RT를 발급하고 DB 업데이트
+        // user.updateRefreshToken(newTokenDto.getRefreshToken());
+        // userRepository.save(user);
+
+        return newTokenDto;
+    }
+
+    // ----------------------------------------------------
+    // ✨ 4. 로그아웃 메서드 (Logout)
+    // ----------------------------------------------------
+    /**
+     * 로그아웃 요청을 처리합니다. Access Token으로 사용자를 식별하고 DB의 Refresh Token을 삭제합니다.
+     * @param accessToken 로그아웃 요청 시 받은 Access Token
+     */
+    @Transactional
+    public void logout(String accessToken) {
+
+        // 1. Access Token에서 사용자 ID (loginUserId) 추출 (AT가 만료되었어도 Claims 추출 가능)
+        Claims claims = jwtTokenProvider.getClaims(accessToken);
+        String loginUserId = claims.getSubject();
+
+        // 2. DB에서 사용자 조회 및 Refresh Token 삭제 (NULL 처리)
+        User user = userRepository.findByLoginUserId(loginUserId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        user.deleteRefreshToken();
+        userRepository.save(user);
+
+        // (선택적) Access Token 블랙리스트 처리 로직 추가 (남은 AT 만료 시간 동안 해당 토큰 사용 차단)
     }
 }

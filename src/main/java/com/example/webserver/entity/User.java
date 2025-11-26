@@ -4,11 +4,11 @@ import lombok.*;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.List; // Collection 및 List 임포트 추가
+import java.util.List;
 import lombok.AccessLevel;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails; // UserDetails 임포트
+import org.springframework.security.core.userdetails.UserDetails;
 
 @Entity
 @Getter
@@ -38,55 +38,79 @@ public class User implements UserDetails { // 💡 UserDetails 인터페이스 �
     @Column(name = "is_admin", nullable = false)
     private boolean isAdmin;
 
+    // ------------------------------------------------------------------
+    // ✨ 리프레시 토큰 저장을 위한 필드 추가
+    // ------------------------------------------------------------------
+    @Column(name = "refresh_token", length = 512)
+    private String refreshToken;
+
+
     @Builder
     public User(String loginUserId, String passwordHash, boolean isAdmin) {
         this.loginUserId = loginUserId;
         this.passwordHash = passwordHash;
         this.isAdmin = isAdmin;
         this.joinDate = LocalDateTime.now();
+        // 회원가입 시에는 Refresh Token이 null 상태입니다.
+        this.refreshToken = null;
     }
 
     // ------------------------------------------------------------------
-    // 💡 UserDetails 인터페이스 필수 구현 메서드
+    // ✨ Refresh Token 업데이트/삭제 메서드 추가
+    // ------------------------------------------------------------------
+
+    /**
+     * 로그인 성공 시 새로운 Refresh Token을 저장합니다.
+     * @param refreshToken 새로 발급된 Refresh Token 문자열
+     */
+    public void updateRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    /**
+     * 로그아웃 시 Refresh Token을 DB에서 삭제합니다 (NULL 처리).
+     */
+    public void deleteRefreshToken() {
+        this.refreshToken = null;
+    }
+
+    // ------------------------------------------------------------------
+    // UserDetails 인터페이스 필수 구현 메서드 (변경 없음)
     // ------------------------------------------------------------------
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // is_admin 필드에 따라 권한을 부여합니다.
-        // Spring Security의 권한 이름은 보통 "ROLE_" 접두사를 사용합니다.
         String role = this.isAdmin ? "ROLE_ADMIN" : "ROLE_USER";
         return List.of(new SimpleGrantedAuthority(role));
     }
 
     @Override
     public String getPassword() {
-        // DB에 저장된 해시된 비밀번호를 반환합니다.
         return this.passwordHash;
     }
 
     @Override
     public String getUsername() {
-        // 사용자를 식별할 수 있는 고유값 (여기서는 login_user_id)을 반환합니다.
-        return this.loginUserId;
+        return this.loginUserId; // login_user_id를 사용자 이름으로 사용
     }
 
     @Override
     public boolean isAccountNonExpired() {
-        return true; // 계정 만료 여부
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true; // 계정 잠금 여부
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true; // 비밀번호 만료 여부
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
-        return true; // 계정 활성화 여부
+        return true;
     }
 }
