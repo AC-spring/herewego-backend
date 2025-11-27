@@ -1,4 +1,4 @@
-package com.example.webserver.config;
+package com.example.webserver.config.jwt;
 
 import com.example.webserver.dto.TokenDto;
 import io.jsonwebtoken.*;
