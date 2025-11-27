@@ -1,13 +1,12 @@
 package com.example.webserver.service;
 
-import com.example.webserver.config.JwtTokenProvider;
-import com.example.webserver.dto.LoginRequestDto;
+import com.example.webserver.config.jwt.JwtTokenProvider;
+import com.example.webserver.dto.request.LoginRequestDto;
 import com.example.webserver.dto.TokenDto;
 
-import com.example.webserver.dto.UserRequestDto;
-import com.example.webserver.dto.UserResponseDto;
+import com.example.webserver.dto.request.UserRequestDto;
+import com.example.webserver.dto.response.UserResponseDto;
 import com.example.webserver.entity.User;
-import com.example.webserver.service.DuplicateUsernameException; // 가정한 예외
 import com.example.webserver.repository.UserRepository;
 import io.jsonwebtoken.Claims; // ✨ 추가: JWT Claims
 import lombok.RequiredArgsConstructor;
