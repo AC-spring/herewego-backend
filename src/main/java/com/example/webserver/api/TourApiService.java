@@ -123,6 +123,7 @@ public class TourApiService {
                 .queryParam("numOfRows", numOfRows)
                 .queryParam("pageNo", pageNo)
                 .queryParam("arrange", "R") // 조회수 순 정렬
+                .queryParam("contentTypeId", 12) // ✨ 추가: 콘텐츠 타입을 12(관광지)로 제한
                 .build();
     }
 
