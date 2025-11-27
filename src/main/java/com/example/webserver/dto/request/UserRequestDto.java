@@ -1,4 +1,4 @@
-package com.example.webserver.dto;
+package com.example.webserver.dto.request;
 
 import com.example.webserver.entity.User;
 import lombok.*;

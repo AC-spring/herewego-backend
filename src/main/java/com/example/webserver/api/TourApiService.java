@@ -3,7 +3,7 @@ package com.example.webserver.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.example.webserver.dto.TourItemDto;
-import com.example.webserver.dto.TourApiResponseDto;
+import com.example.webserver.dto.response.TourApiResponseDto;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

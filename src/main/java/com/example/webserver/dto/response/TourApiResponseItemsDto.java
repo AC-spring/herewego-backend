@@ -1,5 +1,6 @@
-package com.example.webserver.dto;
+package com.example.webserver.dto.response;
 
+import com.example.webserver.dto.TourItemDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import java.util.List;

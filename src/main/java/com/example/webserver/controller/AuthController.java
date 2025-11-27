@@ -1,9 +1,9 @@
 package com.example.webserver.controller;
 
-import com.example.webserver.dto.LoginRequestDto;
+import com.example.webserver.dto.request.LoginRequestDto;
 import com.example.webserver.dto.TokenDto;
-import com.example.webserver.dto.UserRequestDto;
-import com.example.webserver.dto.UserResponseDto;
+import com.example.webserver.dto.request.UserRequestDto;
+import com.example.webserver.dto.response.UserResponseDto;
 import com.example.webserver.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

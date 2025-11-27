@@ -1,6 +1,7 @@
 package com.example.webserver.config;
 
-import com.example.webserver.config.JwtAuthenticationFilter; // 💡 필터 패키지 임포트
+import com.example.webserver.config.jwt.JwtAuthenticationFilter;
+import com.example.webserver.config.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
