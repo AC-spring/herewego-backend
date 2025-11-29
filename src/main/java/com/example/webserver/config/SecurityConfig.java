@@ -40,8 +40,8 @@ public class SecurityConfig {
                         // 1. 토큰이 필요 없는 경로 설정 (POST 요청)
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/signup", "/api/v1/auth/login", "/api/v1/auth/reissue").permitAll()
 
-                        // 3. 관광 API (인증된 사용자만 접근 허용)
-                        .requestMatchers("/api/v1/tour/**").authenticated()
+//                        // 3. 관광 API (인증된 사용자만 접근 허용)
+//                        .requestMatchers("/api/v1/tour/**").authenticated()
 
                         // 4. 나머지 모든 요청은 인증 필요
                         .anyRequest().authenticated()

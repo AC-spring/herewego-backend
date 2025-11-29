@@ -42,4 +42,7 @@ public class TourItemDto {
     // --- 4. 기타 정보 ---
     @JsonProperty("readcount")
     private Integer readCount; // 조회수 (정렬 기준 'R'에서 사용)
+
+    @JsonProperty("overview")
+    private Integer overview; // 관광지 정보 (정렬 기준 'R'에서 사용)
 }
