@@ -6,7 +6,7 @@ import lombok.Data;
 @Data // Lombok을 사용하여 Getter, Setter, toString 등을 자동 생성
 public class TourItemDto {
 
-    // 필수 정보
+    // --- 1. 핵심 식별자 및 필수 정보 ---
     @JsonProperty("contentid")
     private String contentId; // 콘텐츠 ID (고유 식별자)
 
@@ -17,17 +17,29 @@ public class TourItemDto {
     private String title; // 제목
 
     @JsonProperty("addr1")
-    private String address; // 대표 주소
+    private String address; // 대표 주소 (addr1)
 
 
-    // 지역 코드 (어떤 지역인지 구분하기 위해 필요)
+    // --- 2. 지역 코드 정보 (모든 검색 API에서 공통) ---
     @JsonProperty("areacode")
     private String areaCode; // 지역 코드 (1=서울, 31=경기 등)
 
-    // 추가 정보
+
+    // --- 3. 상세 정보 (검색 시 유용하며, 없으면 null 처리됨) ---
+
+    @JsonProperty("addr2")
+    private String detailAddress; // 상세 주소 (addr2)
+
+    @JsonProperty("tel")
+    private String tel; // 전화번호
+
     @JsonProperty("firstimage")
     private String firstImage; // 대표 이미지 URL (소형)
 
+    @JsonProperty("firstimage2")
+    private String firstImage2; // 대표 이미지 URL (대형)
+
+    // --- 4. 기타 정보 ---
     @JsonProperty("readcount")
     private Integer readCount; // 조회수 (정렬 기준 'R'에서 사용)
 }
