@@ -1,8 +1,6 @@
 package com.example.webserver.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -15,14 +13,13 @@ import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.io.UnsupportedEncodingException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * 콘텐츠 ID 기반 관광지 상세 정보를 조회하는 서비스입니다.
- * 403 Forbidden 에러 해결을 위해 모든 필수/부가 파라미터가 명시되고,
- * Content Type ID 제약을 제거한 최종 버전입니다.
+ * Controller의 Spring MVC 전환에 따라, 이 서비스는 내부적으로 WebClient(Reactive)를 사용하되,
+ * 외부로는 동기적(Blocking) 방식인 String을 반환하도록 .block()을 적용했습니다.
  */
 @Service
 @Slf4j
@@ -32,7 +29,6 @@ public class TourDetailCommon {
     private final ObjectMapper objectMapper;
 
     // detailCommon2 엔드포인트 (상세 정보 조회)
-    // 시작 슬래시('/')를 제거하여 URL 결합 오류를 방지합니다. (WebClientConfig의 baseUrl과 결합됨)
     private static final String API_SERVICE_PATH = "/B551011/KorService2/detailCommon2";
 
     @Value("${api.tour.service-key}")
@@ -46,31 +42,33 @@ public class TourDetailCommon {
     }
 
     // --------------------------------------------------------------------------------
-    // 1. 단일 콘텐츠 상세 조회 메서드 (detailCommon2 전용)
+    // 1. 단일 콘텐츠 상세 조회 메서드 (Spring MVC Controller용 공개 메서드)
     // --------------------------------------------------------------------------------
     /**
-     * 콘텐츠 ID를 이용해 API를 호출하고 JSON 응답 문자열을 Mono로 반환합니다.
-     * @param contentId 상세 정보를 조회할 콘텐츠 ID (필수)
-     * @param pageNo 페이지 번호 (일반적으로 상세 조회 시 1)
-     * @return API 응답 JSON 문자열을 담은 Mono
+     * 콘텐츠 ID를 이용해 API를 동기적으로 호출하고 JSON 응답 문자열(String)을 반환합니다.
+     * Service 내부의 Mono를 .block() 처리하여 Controller가 동기식으로 사용할 수 있도록 합니다.
+     * * @param contentId 상세 정보를 조회할 콘텐츠 ID (필수)
+     * @return API 응답 JSON 문자열 (String)
      */
-    public Mono<String> getCommonDetail(String contentId, int pageNo) {
+    public String detailSearch(String contentId) {
         // detailCommon2에 필요한 파라미터 맵을 생성합니다.
         Map<String, String> params = new HashMap<>();
         params.put("contentId", contentId); // 입력받은 contentId 사용 (필수)
-        params.put("pageNo", String.valueOf(pageNo));
-        params.put("numOfRows", "1");
+        params.put("pageNo", "1"); // 페이지 번호 1로 고정
+        params.put("numOfRows", "1"); // 한 개의 데이터만 요청
 
-
-        return callApiInternal(API_SERVICE_PATH, params);
+        // ⬅️ callApiInternal이 반환하는 Mono<String>에 .block()을 적용하여 String을 동기적으로 추출합니다.
+        // 이는 Servlet 환경에서 WebClient를 사용할 때의 표준 패턴입니다.
+        return callApiInternal(API_SERVICE_PATH, params).block();
     }
 
     // --------------------------------------------------------------------------------
-    // 2. 범용 API 호출 및 내부 유틸리티 메서드
+    // 2. 범용 API 호출 및 내부 유틸리티 메서드 (Mono<String> 반환 유지)
     // --------------------------------------------------------------------------------
 
     /**
      * 내부적으로 API를 호출하여 결과를 Mono<String>으로 반환하는 범용 메서드입니다.
+     * WebClient의 논블로킹 특성을 유지합니다.
      * @param apiPath 호출할 API 엔드포인트 경로
      * @param requiredParams API에 필요한 동적 파라미터 맵
      * @return API 응답 JSON 문자열을 담은 Mono
@@ -136,3 +134,4 @@ public class TourDetailCommon {
         return builder.build();
     }
 }
+
