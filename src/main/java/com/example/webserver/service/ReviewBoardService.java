@@ -85,4 +85,23 @@ public class ReviewBoardService {
         // 4. DTO로 변환하여 반환
         return ReviewBoardResponseDto.of(board);
     }
+    @Transactional // 삭제 작업이므로 @Transactional 필수
+    public void deletePost(Long id, String loginUserId) {
+
+        // 1. 게시글 조회 (없으면 예외)
+        ReviewBoard board = reviewBoardRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("삭제할 게시글을 찾을 수 없습니다. (ID: " + id + ")"));
+
+        // 2. ★★★ 권한 확인 (현재 로그인 ID와 작성자 ID 비교) ★★★
+        if (!board.getUser().getLoginUserId().equals(loginUserId)) {
+            // 권한이 없으면 예외 발생
+            throw new RuntimeException("게시글 삭제 권한이 없습니다.");
+        }
+
+        // 3. DB에서 게시글 삭제
+        reviewBoardRepository.delete(board);
+
+        // 참고: reviewBoardRepository.deleteById(id)를 사용할 수도 있지만,
+        // 위처럼 엔티티를 미리 조회하여 권한을 확인하는 것이 더 안전하고 일반적입니다.
+    }
 }
