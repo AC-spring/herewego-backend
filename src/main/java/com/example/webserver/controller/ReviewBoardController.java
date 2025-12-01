@@ -66,4 +66,17 @@ public class ReviewBoardController {
 
         return ResponseEntity.ok(response);
     }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteReview(@PathVariable Long id) {
+
+        // 1. 현재 로그인 사용자(삭제 요청자)의 ID를 Security Context에서 가져옵니다.
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String loginUserId = authentication.getName();
+
+        // 2. 서비스 계층으로 ID와 사용자 ID를 전달하여 삭제 처리
+        reviewBoardService.deletePost(id, loginUserId);
+
+        // 3. 204 No Content 응답 반환 (삭제 성공 후 응답 본문이 없음)
+        return ResponseEntity.noContent().build();
+    }
 }
