@@ -6,6 +6,7 @@ import com.example.webserver.entity.ReviewBoard;
 import com.example.webserver.entity.User;
 import com.example.webserver.repository.ReviewBoardRepository;
 import com.example.webserver.repository.UserRepository;
+import com.example.webserver.exception.AuthorizationException; // ★ 추가: Custom Exception Import
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +20,29 @@ public class ReviewBoardService {
 
     private final ReviewBoardRepository reviewBoardRepository;
     private final UserRepository userRepository;
+
+    // -----------------------------------------------------------------
+    // ★★★ 추가: 관리자 권한 및 작성자 일치 확인 헬퍼 메서드 ★★★
+    // -----------------------------------------------------------------
+    /**
+     * 게시글 수정/삭제 권한을 확인합니다. (작성자 또는 관리자만 허용)
+     */
+    private void checkAuthorization(ReviewBoard board, String loginUserId) {
+
+        // 1. 현재 로그인 사용자 조회 (관리자 권한 확인용)
+        User currentUser = userRepository.findByLoginUserId(loginUserId)
+                .orElseThrow(() -> new RuntimeException("현재 로그인된 사용자를 찾을 수 없습니다."));
+
+        // 2. 권한 확인 로직: 작성자이거나 관리자이면 통과
+        boolean isAuthor = board.getUser().getLoginUserId().equals(loginUserId);
+        boolean isAdmin = currentUser.isAdmin(); // User 엔티티에 isAdmin() 메서드가 있다고 가정
+
+        if (!isAuthor && !isAdmin) {
+            // ★★★ 변경: RuntimeException 대신 AuthorizationException을 던집니다. ★★★
+            throw new AuthorizationException("게시글 수정/삭제 권한이 없습니다. (작성자 또는 관리자만 가능)");
+        }
+    }
+
 
     // 1. 게시글 생성 (Create)
     @Transactional
@@ -60,48 +84,44 @@ public class ReviewBoardService {
 
         return boardPage.map(ReviewBoardResponseDto::of);
     }
-    @Transactional // 수정 작업이므로 @Transactional 필수
+
+    // -----------------------------------------------------------------
+    // 4. 게시글 수정 (Update) - 권한 확인 로직 호출
+    // -----------------------------------------------------------------
+    @Transactional
     public ReviewBoardResponseDto updatePost(Long id, String loginUserId, ReviewBoardRequestDto requestDto) {
 
         // 1. 게시글 조회 (없으면 예외)
         ReviewBoard board = reviewBoardRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("수정할 게시글을 찾을 수 없습니다. (ID: " + id + ")"));
 
-        // 2. ★★★ 권한 확인 (현재 로그인 ID와 작성자 ID 비교) ★★★
-        if (!board.getUser().getLoginUserId().equals(loginUserId)) {
-            // 실제 구현에서는 Custom Exception (403 Forbidden)을 던지는 것이 좋습니다.
-            throw new RuntimeException("게시글 수정 권한이 없습니다. (작성자 불일치)");
-        }
+        // 2. 권한 확인 (작성자 또는 관리자)
+        checkAuthorization(board, loginUserId);
 
-        // 3. Entity 수정 (ReviewBoard.java의 updatePost 메서드 사용)
+        // 3. Entity 수정
         board.updatePost(
                 requestDto.getTitle(),
                 requestDto.getContent(),
                 requestDto.getRegion()
         );
 
-        // @Transactional에 의해 수정 내용과 updatedAt이 자동 반영됨
-
-        // 4. DTO로 변환하여 반환
         return ReviewBoardResponseDto.of(board);
     }
-    @Transactional // 삭제 작업이므로 @Transactional 필수
+
+    // -----------------------------------------------------------------
+    // 5. 게시글 삭제 (Delete) - 권한 확인 로직 호출
+    // -----------------------------------------------------------------
+    @Transactional
     public void deletePost(Long id, String loginUserId) {
 
         // 1. 게시글 조회 (없으면 예외)
         ReviewBoard board = reviewBoardRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("삭제할 게시글을 찾을 수 없습니다. (ID: " + id + ")"));
 
-        // 2. ★★★ 권한 확인 (현재 로그인 ID와 작성자 ID 비교) ★★★
-        if (!board.getUser().getLoginUserId().equals(loginUserId)) {
-            // 권한이 없으면 예외 발생
-            throw new RuntimeException("게시글 삭제 권한이 없습니다.");
-        }
+        // 2. 권한 확인 (작성자 또는 관리자)
+        checkAuthorization(board, loginUserId);
 
         // 3. DB에서 게시글 삭제
         reviewBoardRepository.delete(board);
-
-        // 참고: reviewBoardRepository.deleteById(id)를 사용할 수도 있지만,
-        // 위처럼 엔티티를 미리 조회하여 권한을 확인하는 것이 더 안전하고 일반적입니다.
     }
 }
