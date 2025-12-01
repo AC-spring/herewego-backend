@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.Set; // Set 임포트 추가
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -32,6 +32,7 @@ public class TourApiService {
 
     private static final int NUM_OF_ROWS_PER_REGION = 12;
     private static final int FINAL_TOTAL_LIMIT = 12;
+    private static final int DEFAULT_PAGE_NO = 1; // ★ 추가: pageNo 고정값 정의
 
     private static final String API_SERVICE_PATH = "/B551011/KorService2/areaBasedList2";
 
@@ -49,22 +50,31 @@ public class TourApiService {
     // 1. 단일 지역 코드 처리 메서드 (기존 유지)
     // --------------------------------------------------------------------------------
     public String getAreaBasedList(String areaCode, int pageNo) {
+        // 내부 메서드가 pageNo를 요구하므로 내부에서 1을 고정하지 않고, 이 메서드는 그대로 유지
         return getAreaBasedListInternal(areaCode, pageNo);
     }
 
     // --------------------------------------------------------------------------------
-    // 2. 다중 지역 코드 처리 메서드 (기존 유지)
+    // 2. 다중 지역 코드 처리 메서드 (수정됨: pageNo 파라미터 제거 및 1로 고정)
     // --------------------------------------------------------------------------------
 
-    public List<TourItemDto> getTop12ItemsByRegionGroup(List<String> areaCodes, int pageNo) {
+    /**
+     * 다중 지역 코드 목록을 받아 각 지역별로 아이템을 조회하고,
+     * 균형 있게 배분하여 최종 12개의 아이템을 반환합니다.
+     * @param areaCodes 조회할 지역 코드 리스트
+     * @return 균형 있게 배분된 TourItemDto 리스트 (최대 12개)
+     */
+    public List<TourItemDto> getTop12ItemsByRegionGroup(List<String> areaCodes) { // ★ pageNo 제거
         String encodedServiceKey = encodeServiceKey();
+
+        final int fixedPageNo = DEFAULT_PAGE_NO; // 1로 고정
 
         // 순차 처리 (concatMap 사용)
         List<String> rawResponses = Flux.fromIterable(areaCodes)
                 .concatMap(areaCode -> {
-                    log.info("Requesting {} items for areaCode: {}", NUM_OF_ROWS_PER_REGION, areaCode);
+                    log.info("Requesting {} items for areaCode: {} on page: {}", NUM_OF_ROWS_PER_REGION, areaCode, fixedPageNo);
                     return tourApiWebClient.get()
-                            .uri(API_SERVICE_PATH, uriBuilder -> buildUri(uriBuilder, encodedServiceKey, areaCode.trim(), pageNo, NUM_OF_ROWS_PER_REGION))
+                            .uri(API_SERVICE_PATH, uriBuilder -> buildUri(uriBuilder, encodedServiceKey, areaCode.trim(), fixedPageNo, NUM_OF_ROWS_PER_REGION)) // ★ fixedPageNo 사용
                             .retrieve()
                             .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(), clientResponse -> {
                                 return clientResponse.bodyToMono(String.class)
@@ -123,12 +133,12 @@ public class TourApiService {
                 .queryParam("numOfRows", numOfRows)
                 .queryParam("pageNo", pageNo)
                 .queryParam("arrange", "R") // 조회수 순 정렬
-                .queryParam("contentTypeId", 12) // ✨ 추가: 콘텐츠 타입을 12(관광지)로 제한
+                .queryParam("contentTypeId", 12) // 콘텐츠 타입을 12(관광지)로 제한
                 .build();
     }
 
     /**
-     * ✨ 수정됨: 지역별 균형 배분 후, 남은 슬롯을 전체 목록 상위 아이템으로 채워 총 12개를 반환합니다.
+     * 수정됨: 지역별 균형 배분 후, 남은 슬롯을 전체 목록 상위 아이템으로 채워 총 12개를 반환합니다.
      */
     private List<TourItemDto> parseCombineAndLimit(List<String> rawResponses, int limit) {
 
@@ -162,7 +172,7 @@ public class TourApiService {
 
         // 2. 지역 코드별로 그룹화 및 초기 균등 아이템 추출 (라운드 로빈)
         Map<String, List<TourItemDto>> groupedByArea = allItems.stream()
-                .collect(Collectors.groupingBy(TourItemDto::getAreaCode)); // ✨ getAreaCode로 수정
+                .collect(Collectors.groupingBy(TourItemDto::getAreaCode));
 
         List<TourItemDto> finalItems = new ArrayList<>();
         Set<String> selectedContentIds = new java.util.HashSet<>(); // 중복 방지를 위해 Content ID를 저장

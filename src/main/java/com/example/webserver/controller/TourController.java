@@ -74,7 +74,7 @@ public class TourController {
         try {
             // 2. TourApiService의 통합 검색 메서드 호출
             // 이 메서드는 모든 지역의 데이터를 통합하여 최종 12개 아이템만 반환합니다.
-            List<TourItemDto> top12Items = tourApiService.getTop12ItemsByRegionGroup(areaCodes, pageNo);
+            List<TourItemDto> top12Items = tourApiService.getTop12ItemsByRegionGroup(areaCodes);
 
             // 3. 성공 응답 (DTO 리스트를 JSON 형태로 반환)
             return ResponseEntity.ok(top12Items);
