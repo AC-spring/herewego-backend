@@ -9,10 +9,12 @@ import com.example.webserver.repository.CommentRepository;
 import com.example.webserver.repository.ReviewBoardRepository;
 import com.example.webserver.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,9 +25,6 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final ReviewBoardRepository reviewBoardRepository;
     private final UserRepository userRepository;
-
-    // ------------------- DTO 정의 -------------------
-    // (DTO 파일은 별도로 존재한다고 가정)
 
     // ------------------- 댓글 작성 -------------------
 
@@ -68,8 +67,8 @@ public class CommentService {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new IllegalArgumentException("댓글 ID를 찾을 수 없습니다: " + commentId));
 
-        // 1. 권한 확인: 현재 로그인 사용자와 댓글 작성자가 동일해야 수정 가능
-        if (!comment.getUser().getLoginUserId().equals(loginUserId)) {
+        // 1. 권한 확인: 관리자이거나 작성자 본인이어야 수정 가능
+        if (!hasPermission(comment, loginUserId)) {
             throw new IllegalArgumentException("댓글을 수정할 권한이 없습니다.");
         }
 
@@ -86,12 +85,43 @@ public class CommentService {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new IllegalArgumentException("댓글 ID를 찾을 수 없습니다: " + commentId));
 
-        // 1. 권한 확인: 현재 로그인 사용자와 댓글 작성자가 동일해야 삭제 가능
-        if (!comment.getUser().getLoginUserId().equals(loginUserId)) {
+        // 1. 권한 확인: 관리자이거나 작성자 본인이어야 삭제 가능
+        if (!hasPermission(comment, loginUserId)) {
             throw new IllegalArgumentException("댓글을 삭제할 권한이 없습니다.");
         }
 
         // 2. 삭제 실행
         commentRepository.delete(comment);
+    }
+
+    // ------------------- 권한 확인 유틸리티 -------------------
+
+    /**
+     * 현재 사용자가 댓글의 작성자이거나 관리자인지 확인합니다.
+     * @param comment 검증할 댓글 엔티티
+     * @param loginUserId 현재 로그인한 사용자 ID
+     * @return 권한이 있으면 true, 없으면 false
+     */
+    private boolean hasPermission(Comment comment, String loginUserId) {
+        // 1. 현재 사용자 엔티티를 조회하여 권한 정보 획득
+        Optional<User> currentUserOpt = userRepository.findByLoginUserId(loginUserId);
+
+        if (currentUserOpt.isEmpty()) {
+            return false; // 사용자를 찾을 수 없음
+        }
+
+        User currentUser = currentUserOpt.get();
+
+        // 2. 권한 확인 로직
+        // A. 관리자 권한 확인 (ROLE_ADMIN)
+        // User 엔티티의 getAuthorities()가 is_admin 필드를 기반으로 ROLE_ADMIN을 반환함
+        boolean isAdmin = currentUser.getAuthorities()
+                .contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+
+        // B. 작성자 본인 확인
+        boolean isOwner = comment.getUser().getLoginUserId().equals(loginUserId);
+
+        // 관리자이거나 작성자 본인인 경우 접근 허용
+        return isAdmin || isOwner;
     }
 }
