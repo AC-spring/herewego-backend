@@ -6,18 +6,25 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Getter
 @Table(name = "review")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ReviewBoard extends BaseTimeEntity {
+public class ReviewBoard extends BaseTimeEntity { // BaseTimeEntity 상속
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "review_id")
     private Long id;
 
-    // 작성자 정보
+    // 1:N 관계: 하나의 ReviewBoard에 여러 개의 Comment가 달림
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments = new ArrayList<>();
+
+    // N:1 관계: 작성자
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

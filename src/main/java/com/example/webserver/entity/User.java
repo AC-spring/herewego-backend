@@ -14,7 +14,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 @Getter
 @Table(name = "users")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class User implements UserDetails { // 💡 UserDetails 인터페이스 구현
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "users_seq_generator")
@@ -38,12 +38,8 @@ public class User implements UserDetails { // 💡 UserDetails 인터페이스 �
     @Column(name = "is_admin", nullable = false)
     private boolean isAdmin;
 
-    // ------------------------------------------------------------------
-    // ✨ 리프레시 토큰 저장을 위한 필드 추가
-    // ------------------------------------------------------------------
     @Column(name = "refresh_token", length = 512)
     private String refreshToken;
-
 
     @Builder
     public User(String loginUserId, String passwordHash, boolean isAdmin) {
@@ -51,32 +47,16 @@ public class User implements UserDetails { // 💡 UserDetails 인터페이스 �
         this.passwordHash = passwordHash;
         this.isAdmin = isAdmin;
         this.joinDate = LocalDateTime.now();
-        // 회원가입 시에는 Refresh Token이 null 상태입니다.
         this.refreshToken = null;
     }
 
-    // ------------------------------------------------------------------
-    // ✨ Refresh Token 업데이트/삭제 메서드 추가
-    // ------------------------------------------------------------------
-
-    /**
-     * 로그인 성공 시 새로운 Refresh Token을 저장합니다.
-     * @param refreshToken 새로 발급된 Refresh Token 문자열
-     */
     public void updateRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
     }
 
-    /**
-     * 로그아웃 시 Refresh Token을 DB에서 삭제합니다 (NULL 처리).
-     */
     public void deleteRefreshToken() {
         this.refreshToken = null;
     }
-
-    // ------------------------------------------------------------------
-    // UserDetails 인터페이스 필수 구현 메서드 (변경 없음)
-    // ------------------------------------------------------------------
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -91,26 +71,18 @@ public class User implements UserDetails { // 💡 UserDetails 인터페이스 �
 
     @Override
     public String getUsername() {
-        return this.loginUserId; // login_user_id를 사용자 이름으로 사용
+        return this.loginUserId;
     }
 
     @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
+    public boolean isAccountNonExpired() { return true; }
 
     @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
+    public boolean isAccountNonLocked() { return true; }
 
     @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
+    public boolean isCredentialsNonExpired() { return true; }
 
     @Override
-    public boolean isEnabled() {
-        return true;
-    }
+    public boolean isEnabled() { return true; }
 }

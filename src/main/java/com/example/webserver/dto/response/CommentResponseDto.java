@@ -1,0 +1,30 @@
+package com.example.webserver.dto.response;
+
+import com.example.webserver.entity.Comment;
+import lombok.Builder;
+import lombok.Getter;
+
+import java.time.LocalDateTime;
+
+@Getter
+@Builder
+public class CommentResponseDto {
+    private Long commentId;
+    private String content;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private String authorUsername;
+    private Long reviewId; // ⬅️ postId 대신 reviewId 사용
+
+    public static CommentResponseDto of(Comment comment) {
+        return CommentResponseDto.builder()
+                .commentId(comment.getId())
+                .content(comment.getContent())
+                .createdAt(comment.getCreatedAt())
+                .updatedAt(comment.getUpdatedAt())
+                .authorUsername(comment.getUser().getLoginUserId())
+                // ⬇️ 오류 발생 지점 수정: getPost()를 getReview()로 변경
+                .reviewId(comment.getReview().getId()) // ⬅️ 수정 완료
+                .build();
+    }
+}

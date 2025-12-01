@@ -4,5 +4,5 @@ import com.example.webserver.entity.ReviewBoard;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ReviewBoardRepository extends JpaRepository<ReviewBoard, Long> {
-    // 기본 CRUD 메서드는 상속받아 사용합니다.
+    // ... 필요한 추가 메서드 (예: findByTitleContaining 등)
 }
