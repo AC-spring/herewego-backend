@@ -2,8 +2,12 @@ package com.example.webserver.dto.response;
 
 import com.example.webserver.entity.User;
 import lombok.*;
-import java.time.LocalDateTime; // LocalDateTime을 사용하기 위해 import 추가
+import java.time.LocalDateTime;
 
+/**
+ * 사용자 정보 조회 응답 DTO.
+ * 보안상의 이유로 비밀번호 해시 값(passwordHash)을 포함하지 않습니다.
+ */
 @Getter
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -11,15 +15,20 @@ import java.time.LocalDateTime; // LocalDateTime을 사용하기 위해 import �
 public class UserResponseDto {
     private Long userId;
     private String loginUserId;
-    private String passwordHash; // <<< 고객 요청에 따라 다시 추가 (암호화된 해시 값)
+    // private String passwordHash; // ⬅️ ⚠️ 보안상의 이유로 반드시 제거합니다.
 
     private LocalDateTime joinDate; // 가입일 정보 유지
 
+    /**
+     * User 엔티티를 UserResponseDto로 변환하는 정적 팩토리 메서드.
+     * @param user 조회된 User 엔티티
+     * @return 비밀번호 해시를 제외한 UserResponseDto
+     */
     public static UserResponseDto of(User user) {
         return UserResponseDto.builder()
                 .userId(user.getUserId())
                 .loginUserId(user.getLoginUserId())
-                .passwordHash(user.getPasswordHash()) // <<< 해시된 값 전달 로직 복구
+                // .passwordHash(user.getPasswordHash()) // ⬅️ 로직 제거
                 .joinDate(user.getJoinDate())
                 .build();
     }
