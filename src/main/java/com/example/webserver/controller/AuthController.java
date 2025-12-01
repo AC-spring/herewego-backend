@@ -62,4 +62,15 @@ public class AuthController {
         // 204 No Content 응답은 클라이언트에게 성공적으로 처리되었음을 알립니다.
         return ResponseEntity.noContent().build();
     }
+    @DeleteMapping("/deleteaccount")
+    public ResponseEntity<Void> deleteaccount(@RequestHeader("Authorization") String accessTokenHeader) {
+
+        // Access Token 추출
+        String accessToken = accessTokenHeader.substring(7);
+
+        // 서비스 계층에 Access Token을 전달하여 탈퇴 처리 위임
+        authService.deleteaccount(accessToken);
+
+        // 204 No Content 응답은 성공적으로 삭제되었음을 알립니다.
+        return ResponseEntity.noContent().build();}
 }

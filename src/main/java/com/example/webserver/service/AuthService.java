@@ -10,6 +10,8 @@ import com.example.webserver.entity.User;
 import com.example.webserver.repository.UserRepository;
 import io.jsonwebtoken.Claims; // ✨ 추가: JWT Claims
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -26,7 +28,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
-
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
     // ----------------------------------------------------
     // 1. 회원가입 메서드 (Signup)
     // ----------------------------------------------------
@@ -138,6 +140,24 @@ public class AuthService {
         user.deleteRefreshToken();
         userRepository.save(user);
 
+        log.info("USER LOGOUT SUCCESS: User '{}' successfully revoked Refresh Token.", loginUserId);
         // (선택적) Access Token 블랙리스트 처리 로직 추가 (남은 AT 만료 시간 동안 해당 토큰 사용 차단)
+    }
+
+    @Transactional
+    public void deleteaccount(String accessToken) { // ★ 메서드 이름 변경
+
+        // 1. Access Token에서 사용자 ID (loginUserId) 추출
+        Claims claims = jwtTokenProvider.getClaims(accessToken);
+        String loginUserId = claims.getSubject();
+
+        // 2. DB에서 사용자 조회 및 영구 삭제
+        User user = userRepository.findByLoginUserId(loginUserId)
+                .orElseThrow(() -> new RuntimeException("삭제할 사용자를 찾을 수 없습니다."));
+
+        userRepository.delete(user); // JPA Repository의 delete 메서드 사용
+
+        // (선택적) 로그 기록
+         log.warn("USER ACCOUNT DELETED: User '{}' has been permanently deleted.", loginUserId);
     }
 }
