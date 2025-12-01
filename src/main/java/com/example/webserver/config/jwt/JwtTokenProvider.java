@@ -46,35 +46,44 @@ public class JwtTokenProvider {
 
     /**
      * Authentication 객체를 받아 액세스 토큰과 리프레시 토큰을 모두 생성합니다.
+     * 💡 [수정] 권한 정보를 TokenDto에 포함합니다.
      */
     public TokenDto generateTokenDto(Authentication authentication) {
+        // 1. 권한 정보를 문자열로 추출 (예: "ROLE_USER,ROLE_ADMIN")
         String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
 
         long now = (new Date()).getTime();
 
-        // 1. 액세스 토큰 생성 (만료 시간 짧게)
+        // 2. 액세스 토큰 생성 (만료 시간 짧게)
         Date accessTokenExpiresIn = new Date(now + accessTokenExpiration);
         String accessToken = Jwts.builder()
                 .subject(authentication.getName())
-                .claim("auth", authorities)
+                .claim("auth", authorities) // ⬅️ 토큰에 권한 정보를 담습니다.
                 .issuedAt(new Date(now))
                 .expiration(accessTokenExpiresIn)
                 .signWith(key, Jwts.SIG.HS256)
                 .compact();
 
-        // 2. 리프레시 토큰 생성 (만료 시간 길게)
+        // 3. 리프레시 토큰 생성 (만료 시간 길게)
         String refreshToken = Jwts.builder()
                 .expiration(new Date(now + refreshTokenExpiration))
                 .signWith(key, Jwts.SIG.HS256)
                 .compact();
+
+        // 4. 권한 정보를 추출하여 DTO에 주입
+        // authorities는 쉼표로 구분된 문자열이므로, 첫 번째 권한만 필요하다면 분리하여 사용
+        String primaryRole = authorities.split(",")[0];
+        boolean isUserAdmin = primaryRole.equals("ROLE_ADMIN");
 
         return TokenDto.builder()
                 .grantType("Bearer")
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .accessTokenExpiresIn(accessTokenExpiresIn.getTime())
+                .role(primaryRole) //  DTO에 권한 정보 주입
+                .isAdmin(isUserAdmin) // 불리언 값 주입
                 .build();
     }
 

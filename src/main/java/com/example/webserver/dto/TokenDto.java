@@ -21,4 +21,11 @@ public class TokenDto {
 
     // (선택 사항) 액세스 토큰 만료 시간 (밀리초)
     private Long accessTokenExpiresIn;
+
+    /**
+     * 사용자의 권한 정보 (예: "ROLE_USER" 또는 "ROLE_ADMIN").
+     * 클라이언트가 UI 표시 및 접근 제어에 사용합니다.
+     */
+    private String role; // ⬅️ 관리자 여부를 포함하는 권한 필드 추가
+    private boolean isAdmin; // ⬅️ 추가
 }

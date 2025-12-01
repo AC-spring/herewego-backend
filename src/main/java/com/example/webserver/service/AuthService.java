@@ -8,7 +8,7 @@ import com.example.webserver.dto.request.UserRequestDto;
 import com.example.webserver.dto.response.UserResponseDto;
 import com.example.webserver.entity.User;
 import com.example.webserver.repository.UserRepository;
-import io.jsonwebtoken.Claims; // ✨ 추가: JWT Claims
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +29,7 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+
     // ----------------------------------------------------
     // 1. 회원가입 메서드 (Signup)
     // ----------------------------------------------------
@@ -63,17 +64,17 @@ public class AuthService {
         // 2. 실제 인증 시도 및 비밀번호 검증 (Custom UserDetailsService 호출)
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 
-        // 3. 액세스/리프레시 토큰 2종 생성
+        // 3. 액세스/리프레시 토큰 2종 생성 (JwtTokenProvider에서 role이 DTO에 포함됨)
         TokenDto tokenDto = jwtTokenProvider.generateTokenDto(authentication);
 
-        // 4. ✨ DB 저장: Refresh Token만 해당 사용자 엔티티에 저장
+        // 4. DB 저장: Refresh Token만 해당 사용자 엔티티에 저장
         User user = userRepository.findByLoginUserId(loginRequest.getLoginUserId())
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다.")); // 2단계에서 이미 찾았지만 안전을 위해 다시 조회
 
         user.updateRefreshToken(tokenDto.getRefreshToken());
         userRepository.save(user);
 
-        return tokenDto;
+        return tokenDto; // ⬅️ role 정보가 포함된 TokenDto 반환
     }
 
     // ----------------------------------------------------
@@ -111,6 +112,7 @@ public class AuthService {
         );
 
         TokenDto newTokenDto = jwtTokenProvider.generateTokenDto(authentication);
+        // 이때 newTokenDto에는 이미 role 정보가 포함되어 있습니다.
 
         // (선택적) Refresh Token Rotation 전략: 새로운 RT를 발급하고 DB 업데이트
         // user.updateRefreshToken(newTokenDto.getRefreshToken());
@@ -158,6 +160,6 @@ public class AuthService {
         userRepository.delete(user); // JPA Repository의 delete 메서드 사용
 
         // (선택적) 로그 기록
-         log.warn("USER ACCOUNT DELETED: User '{}' has been permanently deleted.", loginUserId);
+        log.warn("USER ACCOUNT DELETED: User '{}' has been permanently deleted.", loginUserId);
     }
 }
