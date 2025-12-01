@@ -52,4 +52,18 @@ public class ReviewBoardController {
 
         return ResponseEntity.ok(response);
     }
+    @PutMapping("/{id}")
+    public ResponseEntity<ReviewBoardResponseDto> updateReview(
+            @PathVariable Long id,
+            @RequestBody @Valid ReviewBoardRequestDto requestDto
+    ) {
+        // 1. 현재 로그인 사용자(수정자)의 ID를 Security Context에서 가져옵니다.
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String loginUserId = authentication.getName();
+
+        // 2. 서비스 계층으로 ID, 사용자 ID, 요청 DTO를 전달하여 수정 처리
+        ReviewBoardResponseDto response = reviewBoardService.updatePost(id, loginUserId, requestDto);
+
+        return ResponseEntity.ok(response);
+    }
 }
