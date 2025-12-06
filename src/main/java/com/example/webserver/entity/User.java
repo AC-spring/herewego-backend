@@ -32,13 +32,8 @@ public class User implements UserDetails {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    /**
-     * ✅ 닉네임 필드 추가
-     * DB의 UNIQUE 및 NOT NULL 제약 조건과 일치시켜야 합니다.
-     * 길이는 DB 설정에 따라 (예: length = 50) 맞춰주세요.
-     */
     @Column(name = "nickname", length = 50, unique = true, nullable = false)
-    private String nickname;
+    private String nickname; // 닉네임 필드 추가
 
     @Column(name = "join_date", nullable = false)
     private LocalDateTime joinDate;
@@ -50,15 +45,25 @@ public class User implements UserDetails {
     private String refreshToken;
 
     @Builder
-    public User(String loginUserId, String passwordHash, String nickname, boolean isAdmin) { // ✅ Builder 생성자에 nickname 추가
+    public User(String loginUserId, String passwordHash, String nickname, boolean isAdmin) {
         this.loginUserId = loginUserId;
         this.passwordHash = passwordHash;
-        this.nickname = nickname; // ✅ 필드 초기화
+        this.nickname = nickname;
         this.isAdmin = isAdmin;
         this.joinDate = LocalDateTime.now();
         this.refreshToken = null;
     }
 
+    // 마이페이지 기능 구현을 위한 수정 메서드
+    public void updateNickname(String newNickname) {
+        this.nickname = newNickname;
+    }
+
+    public void updatePassword(String newPasswordHash) {
+        this.passwordHash = newPasswordHash;
+    }
+
+    // 리프레시 토큰 관리 메서드
     public void updateRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
     }
@@ -67,7 +72,7 @@ public class User implements UserDetails {
         this.refreshToken = null;
     }
 
-    // --- UserDetails 구현 메서드 (변경 없음) ---
+    // --- UserDetails 구현 메서드 ---
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

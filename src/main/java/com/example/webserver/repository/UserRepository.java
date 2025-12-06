@@ -8,13 +8,13 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
+    // 기존 메서드
     boolean existsByLoginUserId(String loginUserId);
     Optional<User> findByLoginUserId(String loginUserId);
 
-    // ✨ 리프레시 토큰을 이용해 사용자를 찾는 메서드 추가
-    /**
-     * Refresh Token 문자열로 User 엔티티를 조회합니다.
-     * 이 메서드는 클라이언트의 RT와 DB의 RT 일치성을 검증하는 데 사용됩니다.
-     */
+    // 리프레시 토큰 관련 메서드
     Optional<User> findByRefreshToken(String refreshToken);
+
+    //닉네임
+    boolean existsByNickname(String nickname);
 }
