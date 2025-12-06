@@ -13,7 +13,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(
                         "http://localhost:5173", // ✅ React 개발 환경
                         "http://localhost:5176", // ✅ 필요 시 다른 로컬 포트
-                        "https://your-frontend-domain.com" // ✅ 배포 환경
+                        "https://herewego-backend.onrender.com" // ✅ 배포 환경
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("Content-Type", "Authorization") // ✅ 토큰(JWT) 인증을 위해 필수
