@@ -32,6 +32,14 @@ public class User implements UserDetails {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    /**
+     * ✅ 닉네임 필드 추가
+     * DB의 UNIQUE 및 NOT NULL 제약 조건과 일치시켜야 합니다.
+     * 길이는 DB 설정에 따라 (예: length = 50) 맞춰주세요.
+     */
+    @Column(name = "nickname", length = 50, unique = true, nullable = false)
+    private String nickname;
+
     @Column(name = "join_date", nullable = false)
     private LocalDateTime joinDate;
 
@@ -42,9 +50,10 @@ public class User implements UserDetails {
     private String refreshToken;
 
     @Builder
-    public User(String loginUserId, String passwordHash, boolean isAdmin) {
+    public User(String loginUserId, String passwordHash, String nickname, boolean isAdmin) { // ✅ Builder 생성자에 nickname 추가
         this.loginUserId = loginUserId;
         this.passwordHash = passwordHash;
+        this.nickname = nickname; // ✅ 필드 초기화
         this.isAdmin = isAdmin;
         this.joinDate = LocalDateTime.now();
         this.refreshToken = null;
@@ -57,6 +66,8 @@ public class User implements UserDetails {
     public void deleteRefreshToken() {
         this.refreshToken = null;
     }
+
+    // --- UserDetails 구현 메서드 (변경 없음) ---
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
