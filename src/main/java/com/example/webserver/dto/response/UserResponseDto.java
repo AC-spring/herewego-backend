@@ -15,7 +15,9 @@ import java.time.LocalDateTime;
 public class UserResponseDto {
     private Long userId;
     private String loginUserId;
-    // private String passwordHash; // ⬅️ ⚠️ 보안상의 이유로 반드시 제거합니다.
+
+    // ✅ 닉네임 필드 추가
+    private String nickname;
 
     private LocalDateTime joinDate; // 가입일 정보 유지
 
@@ -28,7 +30,7 @@ public class UserResponseDto {
         return UserResponseDto.builder()
                 .userId(user.getUserId())
                 .loginUserId(user.getLoginUserId())
-                // .passwordHash(user.getPasswordHash()) // ⬅️ 로직 제거
+                .nickname(user.getNickname()) // ✅ 엔티티의 닉네임 값을 DTO에 설정
                 .joinDate(user.getJoinDate())
                 .build();
     }
