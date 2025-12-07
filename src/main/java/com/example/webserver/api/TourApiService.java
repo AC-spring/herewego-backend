@@ -30,9 +30,12 @@ public class TourApiService {
     private final WebClient tourApiWebClient;
     private final ObjectMapper objectMapper;
 
-    private static final int NUM_OF_ROWS_PER_REGION = 12;
-    private static final int FINAL_TOTAL_LIMIT = 12;
-    private static final int DEFAULT_PAGE_NO = 1; // ★ 추가: pageNo 고정값 정의
+    // --------------------------------------------------------------------------------
+    // ★ 수정된 상수: 아이템 개수 12개 -> 30개로 변경
+    // --------------------------------------------------------------------------------
+    private static final int NUM_OF_ROWS_PER_REGION = 30; // 👈 API 요청 시 지역당 가져올 아이템 수 (30개로 증가)
+    private static final int FINAL_TOTAL_LIMIT = 30; // 👈 최종 반환할 아이템 수 제한 (30개로 증가)
+    private static final int DEFAULT_PAGE_NO = 1;
 
     private static final String API_SERVICE_PATH = "/B551011/KorService2/areaBasedList2";
 
@@ -55,26 +58,26 @@ public class TourApiService {
     }
 
     // --------------------------------------------------------------------------------
-    // 2. 다중 지역 코드 처리 메서드 (수정됨: pageNo 파라미터 제거 및 1로 고정)
+    // 2. 다중 지역 코드 처리 메서드
     // --------------------------------------------------------------------------------
 
     /**
      * 다중 지역 코드 목록을 받아 각 지역별로 아이템을 조회하고,
-     * 균형 있게 배분하여 최종 12개의 아이템을 반환합니다.
+     * 균형 있게 배분하여 최종 30개의 아이템을 반환합니다.
      * @param areaCodes 조회할 지역 코드 리스트
-     * @return 균형 있게 배분된 TourItemDto 리스트 (최대 12개)
+     * @return 균형 있게 배분된 TourItemDto 리스트 (최대 30개)
      */
-    public List<TourItemDto> getTop12ItemsByRegionGroup(List<String> areaCodes) { // ★ pageNo 제거
+    public List<TourItemDto> getTop12ItemsByRegionGroup(List<String> areaCodes) {
         String encodedServiceKey = encodeServiceKey();
 
-        final int fixedPageNo = DEFAULT_PAGE_NO; // 1로 고정
+        final int fixedPageNo = DEFAULT_PAGE_NO;
 
         // 순차 처리 (concatMap 사용)
         List<String> rawResponses = Flux.fromIterable(areaCodes)
                 .concatMap(areaCode -> {
                     log.info("Requesting {} items for areaCode: {} on page: {}", NUM_OF_ROWS_PER_REGION, areaCode, fixedPageNo);
                     return tourApiWebClient.get()
-                            .uri(API_SERVICE_PATH, uriBuilder -> buildUri(uriBuilder, encodedServiceKey, areaCode.trim(), fixedPageNo, NUM_OF_ROWS_PER_REGION)) // ★ fixedPageNo 사용
+                            .uri(API_SERVICE_PATH, uriBuilder -> buildUri(uriBuilder, encodedServiceKey, areaCode.trim(), fixedPageNo, NUM_OF_ROWS_PER_REGION))
                             .retrieve()
                             .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(), clientResponse -> {
                                 return clientResponse.bodyToMono(String.class)
@@ -138,11 +141,11 @@ public class TourApiService {
     }
 
     /**
-     * 수정됨: 지역별 균형 배분 후, 남은 슬롯을 전체 목록 상위 아이템으로 채워 총 12개를 반환합니다.
+     * 수정됨: 지역별 균형 배분 후, 남은 슬롯을 전체 목록 상위 아이템으로 채워 총 30개를 반환합니다.
      */
     private List<TourItemDto> parseCombineAndLimit(List<String> rawResponses, int limit) {
 
-        // 1. 모든 응답을 파싱하여 통합 리스트 (allItems) 생성
+        // 1. 모든 응답을 파싱하여 통합 리스트 (allItems) 생성 (이전과 동일)
         List<TourItemDto> allItems = rawResponses.stream()
                 .flatMap(raw -> {
                     try {
@@ -170,21 +173,21 @@ public class TourApiService {
                 })
                 .collect(Collectors.toList());
 
-        // 2. 지역 코드별로 그룹화 및 초기 균등 아이템 추출 (라운드 로빈)
+        // 2. 지역 코드별로 그룹화 및 초기 균등 아이템 추출
         Map<String, List<TourItemDto>> groupedByArea = allItems.stream()
                 .collect(Collectors.groupingBy(TourItemDto::getAreaCode));
 
         List<TourItemDto> finalItems = new ArrayList<>();
-        Set<String> selectedContentIds = new java.util.HashSet<>(); // 중복 방지를 위해 Content ID를 저장
+        Set<String> selectedContentIds = new java.util.HashSet<>();
 
         int numRegions = groupedByArea.size();
-        int itemsToTakePerRegion = numRegions > 0 ? limit / numRegions : 0; // 지역당 2개씩 추출
+        int itemsToTakePerRegion = numRegions > 0 ? limit / numRegions : 0; // 지역당 균등 배분 개수 계산
 
         // 2-1. 균등 배분 (라운드 로빈)
         for (List<TourItemDto> regionItems : groupedByArea.values()) {
             regionItems.stream()
                     .limit(itemsToTakePerRegion)
-                    .filter(item -> selectedContentIds.add(item.getContentId())) // Content ID 중복 방지
+                    .filter(item -> selectedContentIds.add(item.getContentId()))
                     .forEach(finalItems::add);
         }
 
@@ -195,14 +198,12 @@ public class TourApiService {
         // 2-2. 잔여 슬롯 채우기 (전체 목록에서 남은 상위 아이템 추가)
         if (remainingSlots > 0) {
             allItems.stream()
-                    // 이미 선택된 아이템을 제외
                     .filter(item -> !selectedContentIds.contains(item.getContentId()))
-                    // 남은 슬롯만큼만 선택
                     .limit(remainingSlots)
                     .forEach(finalItems::add);
         }
 
-        log.info("최종적으로 총 {}개의 아이템이 반환됩니다.", finalItems.size());
+        log.info("최종적으로 총 {}개의 아이템이 반환됩니다. (목표: {})", finalItems.size(), limit);
 
         return finalItems;
     }
