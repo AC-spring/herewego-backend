@@ -45,4 +45,6 @@ public class TourItemDto {
 
     @JsonProperty("overview")
     private Integer overview; // 관광지 정보 (정렬 기준 'R'에서 사용)
+
+
 }
