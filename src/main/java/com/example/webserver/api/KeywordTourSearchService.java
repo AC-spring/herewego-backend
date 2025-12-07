@@ -29,9 +29,11 @@ public class KeywordTourSearchService {
     private final WebClient tourApiWebClient;
     private final ObjectMapper objectMapper;
 
-    // 키워드 검색에 사용할 상수
-    private static final int KEYWORD_SEARCH_LIMIT = 20;
-    private static final int KEYWORD_TOTAL_LIMIT = 12;
+    // --------------------------------------------------------------------------------
+    // ★ 수정된 상수: 아이템 개수 12개 -> 30개로 변경
+    // --------------------------------------------------------------------------------
+    private static final int KEYWORD_SEARCH_LIMIT = 30; // 👈 API 요청 시 가져올 아이템 수 (30개로 증가)
+    private static final int KEYWORD_TOTAL_LIMIT = 30; // 👈 최종 반환할 아이템 수 제한 (30개로 증가)
     private static final String KEYWORD_SERVICE_PATH = "/B551011/KorService2/searchKeyword2";
 
 
@@ -53,7 +55,7 @@ public class KeywordTourSearchService {
     /**
      * 키워드를 기반으로 관광지 정보를 검색하고 파싱하여 DTO 리스트로 반환합니다.
      * @param keyword 검색할 키워드 (예: "쇼핑", "문화", "음식")
-     * @return 파싱되어 필터링된 TourItemDto 리스트
+     * @return 파싱되어 필터링된 TourItemDto 리스트 (최대 30개)
      */
     public List<TourItemDto> searchDataByKeyword(String keyword) {
         String encodedServiceKey = encodeServiceKey();
@@ -95,7 +97,6 @@ public class KeywordTourSearchService {
 
     /**
      * searchKeyword2 API 호출을 위한 URI 빌더
-     * arrange='R'을 요청에 따라 'O'로 변경하고 contentTypeId 파라미터를 제거했습니다.
      */
     private URI buildKeywordUri(UriBuilder uriBuilder, String encodedServiceKey, String keyword, int numOfRows) {
         return uriBuilder
@@ -106,13 +107,12 @@ public class KeywordTourSearchService {
                 .queryParam("keyword", keyword)
                 .queryParam("numOfRows", numOfRows)
                 .queryParam("pageNo", 1)
-                .queryParam("arrange", "O") // 💡 변경: 제목순 정렬 (이전 요청 반영)
-                // contentTypeId 파라미터 제거됨
+                .queryParam("arrange", "R") // 💡 제목순 정렬
                 .build();
     }
 
     /**
-     * 키워드 검색 응답을 파싱하여 이미지가 있는 아이템만 필터링하고 최대 12개로 제한 후 반환합니다.
+     * 키워드 검색 응답을 파싱하여 이미지가 있는 아이템만 필터링하고 최대 30개로 제한 후 반환합니다.
      */
     private List<TourItemDto> parseAndLimitKeywordResults(String rawResponse, int limit) {
         List<TourItemDto> allItems = new ArrayList<>();
@@ -137,7 +137,7 @@ public class KeywordTourSearchService {
             if (items != null) {
                 // 💡 이미지 필터링 및 아이템 선택
                 items.stream()
-                        // 1. 이미지가 있는 항목만 필터링 (firstImage가 null이 아니고 빈 문자열도 아닌 경우)
+                        // 1. 이미지가 있는 항목만 필터링
                         .filter(item -> item.getFirstImage() != null && !item.getFirstImage().trim().isEmpty())
                         // 2. 최대 개수 제한
                         .limit(limit)
@@ -149,7 +149,7 @@ public class KeywordTourSearchService {
             log.error("JSON 파싱 중 심각한 오류 발생. Raw Data Snippet: {}", rawResponse.substring(0, Math.min(rawResponse.length(), 200)), e);
         }
 
-        log.info("키워드 검색 최종적으로 총 {}개의 아이템이 반환됩니다. (이미지 필터링 완료)", allItems.size());
+        log.info("키워드 검색 최종적으로 총 {}개의 아이템이 반환됩니다. (이미지 필터링 완료, 목표: {})", allItems.size(), limit);
 
         return allItems;
     }
