@@ -50,12 +50,12 @@ public class SecurityConfig {
 
                         // OPTIONS 메서드 (CORS Preflight)는 무조건 허용 (403 에러 방지)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
+                        .requestMatchers("/api/v1/tour/**").permitAll()
                         // 토큰이 필요 없는 경로 설정 (회원가입, 로그인, 재발급)
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/signup", "/api/v1/auth/login", "/api/v1/auth/reissue").permitAll()
 
                         // 관광 API 및 마이페이지 등 인증된 사용자만 접근 허용
-                        .requestMatchers("/api/v1/tour/**", "/api/v1/user/**").authenticated()
+                        .requestMatchers( "/api/v1/user/**").authenticated()
 
                         // 나머지 모든 요청은 인증 필요
                         .anyRequest().authenticated()
