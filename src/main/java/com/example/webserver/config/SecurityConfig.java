@@ -46,7 +46,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/signup", "/api/v1/auth/login", "/api/v1/auth/reissue").permitAll()
 
                         // 1. 기존 여행지 조회 API (GET 요청) 허용
-                        .requestMatchers(HttpMethod.GET, "/api/v1/tour/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/tour/**","/api/v1/reviews","/api/v1/reviews/{id}","/api/v1/reviews/comments/{reviewId}").permitAll()
 
                         // 2. 추가: 새로운 축제 검색 API (GET 요청) 허용
                         .requestMatchers(HttpMethod.GET, "/api/v1/festival/**").permitAll()

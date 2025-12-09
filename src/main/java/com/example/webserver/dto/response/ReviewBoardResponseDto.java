@@ -23,7 +23,7 @@ public class ReviewBoardResponseDto {
                 .id(board.getId())
                 .title(board.getTitle())
                 .content(board.getContent())
-                .authorId(board.getUser().getLoginUserId())
+                .authorId(board.getUser().getNickname())
                 .viewCount(board.getViewCount())
                 .region(board.getRegion())
                 .spotContentId(board.getSpotContentId())

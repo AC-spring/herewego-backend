@@ -22,8 +22,7 @@ public class CommentResponseDto {
                 .content(comment.getContent())
                 .createdAt(comment.getCreatedAt())
                 .updatedAt(comment.getUpdatedAt())
-                .authorUsername(comment.getUser().getLoginUserId())
-                // ⬇️ 오류 발생 지점 수정: getPost()를 getReview()로 변경
+                .authorUsername(comment.getUser().getNickname())
                 .reviewId(comment.getReview().getId()) // ⬅️ 수정 완료
                 .build();
     }
