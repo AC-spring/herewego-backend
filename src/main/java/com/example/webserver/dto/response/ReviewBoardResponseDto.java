@@ -11,7 +11,7 @@ public class ReviewBoardResponseDto {
     private Long id;
     private String title;
     private String content;
-    private String authorId;
+    private String nickname;
     private int viewCount;
     private String region;
     private String spotContentId;
@@ -23,7 +23,7 @@ public class ReviewBoardResponseDto {
                 .id(board.getId())
                 .title(board.getTitle())
                 .content(board.getContent())
-                .authorId(board.getUser().getNickname())
+                .nickname(board.getUser().getNickname())
                 .viewCount(board.getViewCount())
                 .region(board.getRegion())
                 .spotContentId(board.getSpotContentId())
