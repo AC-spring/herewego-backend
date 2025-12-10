@@ -6,8 +6,12 @@ import com.example.webserver.travel.repository.TripRepository;
 import com.example.webserver.travel.dto.TripRequest;
 import com.example.webserver.travel.dto.TripResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +41,15 @@ public class TripService {
 
         Trip savedTrip = tripRepository.save(trip); // Cascade 설정으로 Schedule도 자동 저장
         return savedTrip.getId();
+    }
+    public List<TripResponse> getAllTrips() {
+
+        List<Trip> trips = tripRepository.findAll(Sort.by(Sort.Direction.DESC, "id"));
+
+        
+        return trips.stream()
+                .map(TripResponse::new) // Trip -> TripResponse 변환
+                .collect(Collectors.toList());
     }
 
     // 2. 여행 상세 조회 (Read)

@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/trips")
 @RequiredArgsConstructor
@@ -20,7 +22,12 @@ public class TripController {
         Long tripId = tripService.createTrip(request);
         return ResponseEntity.ok(tripId);
     }
-
+    // 전체 조회
+    @GetMapping
+    public ResponseEntity<List<TripResponse>> getAllTrips() {
+        List<TripResponse> trips = tripService.getAllTrips();
+        return ResponseEntity.ok(trips);
+    }
     // 상세 조회
     @GetMapping("/{id}")
     public ResponseEntity<TripResponse> getTrip(@PathVariable Long id) {
