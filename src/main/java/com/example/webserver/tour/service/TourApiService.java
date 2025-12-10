@@ -33,8 +33,8 @@ public class TourApiService {
     // --------------------------------------------------------------------------------
     // ★ 수정된 상수: 아이템 개수 12개 -> 30개로 변경
     // --------------------------------------------------------------------------------
-    private static final int NUM_OF_ROWS_PER_REGION = 30; // 👈 API 요청 시 지역당 가져올 아이템 수 (30개로 증가)
-    private static final int FINAL_TOTAL_LIMIT = 30; // 👈 최종 반환할 아이템 수 제한 (30개로 증가)
+    private static final int NUM_OF_ROWS_PER_REGION = 100; // 👈 API 요청 시 지역당 가져올 아이템 수 (30개로 증가)
+    private static final int FINAL_TOTAL_LIMIT = 100; // 👈 최종 반환할 아이템 수 제한 (30개로 증가)
     private static final int DEFAULT_PAGE_NO = 1;
 
     private static final String API_SERVICE_PATH = "/B551011/KorService2/areaBasedList2";
