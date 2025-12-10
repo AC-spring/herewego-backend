@@ -11,6 +11,10 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+// ✨ [중요] ReviewBoard 엔티티 위치를 import 해야 합니다.
+// (빨간줄 뜨면 Alt+Enter로 import 하세요)
+import com.example.webserver.review.entity.ReviewBoard;
+
 @Entity
 @Getter
 @Table(name = "users")
@@ -25,25 +29,32 @@ public class User implements UserDetails {
             allocationSize = 1
     )
     @Column(name = "user_id")
-    private Long userId; // 기본 키 (DB: user_id)
+    private Long userId;
 
     @Column(name = "login_user_id", length = 12, unique = true, nullable = false)
-    private String loginUserId; // 로그인 ID (DB: login_user_id, UNIQUE)
+    private String loginUserId;
 
     @Column(name = "password_hash", nullable = false)
-    private String passwordHash; // 암호화된 비밀번호
+    private String passwordHash;
 
     @Column(name = "nickname", length = 50, unique = true, nullable = false)
-    private String nickname; // 사용자 닉네임 (DB: nickname, UNIQUE)
+    private String nickname;
 
     @Column(name = "join_date", nullable = false)
-    private LocalDateTime joinDate; // 가입일
+    private LocalDateTime joinDate;
 
     @Column(name = "is_admin", nullable = false)
-    private boolean isAdmin; // 관리자 권한 여부 (true: ROLE_ADMIN)
+    private boolean isAdmin;
 
     @Column(name = "refresh_token", length = 512)
-    private String refreshToken; // JWT Refresh Token 저장 필드 (로그아웃, 재발급에 사용)
+    private String refreshToken;
+
+    // ✨ [추가된 부분] 회원이 쓴 리뷰들과 연결 (탈퇴 시 자동 삭제 설정)
+    // mappedBy = "user": ReviewBoard 엔티티 안에 있는 변수 이름이 'user'여야 합니다.
+    // cascade = CascadeType.ALL: 유저가 삭제되면 리뷰도 같이 삭제 (REMOVE 전파)
+    // orphanRemoval = true: 연결이 끊어진 리뷰는 삭제
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReviewBoard> reviews = new ArrayList<>();
 
     @Builder
     public User(String loginUserId, String passwordHash, String nickname, boolean isAdmin) {
@@ -55,59 +66,43 @@ public class User implements UserDetails {
         this.refreshToken = null;
     }
 
-    // --- 엔티티 상태 변경 메서드 (마이페이지 및 관리자 기능) ---
+    // --- 엔티티 상태 변경 메서드 ---
 
-    /** 닉네임을 변경합니다. */
     public void updateNickname(String newNickname) {
         this.nickname = newNickname;
     }
 
-    /** 암호화된 비밀번호 해시를 변경합니다. */
     public void updatePassword(String newPasswordHash) {
         this.passwordHash = newPasswordHash;
     }
 
-    /** 리프레시 토큰 값을 업데이트합니다. (로그인 및 재발급 시 사용) */
     public void updateRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
     }
 
-    /** 리프레시 토큰 값을 NULL로 만들어 세션을 무효화합니다. (로그아웃 및 강제 로그아웃에 사용) */
     public void deleteRefreshToken() {
         this.refreshToken = null;
     }
 
     // --- Spring Security UserDetails 구현 ---
 
-    /** 사용자에게 부여된 권한(ROLE) 목록을 반환합니다. */
-
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<GrantedAuthority> authorities = new ArrayList<>();
-
-        // 1. 모든 로그인한 사용자는 기본적으로 "ROLE_USER" 권한을 가짐
         authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
-        // 2. [핵심] DB의 admin 컬럼이 true이면 "ROLE_ADMIN" 권한을 추가로 부여
         if (this.isAdmin) {
             authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
         }
-
         return authorities;
     }
 
     @Override
-    public String getPassword() {
-        return this.passwordHash; // 암호화된 비밀번호를 반환
-    }
+    public String getPassword() { return this.passwordHash; }
 
     @Override
-    public String getUsername() {
-        return this.loginUserId; // 사용자 식별자(로그인 ID)를 반환
-    }
+    public String getUsername() { return this.loginUserId; }
 
-    // 이하 메서드들은 계정 만료/잠금/활성화 여부를 반환하며, 모두 true로 설정되어 있음
     @Override
     public boolean isAccountNonExpired() { return true; }
 
