@@ -36,8 +36,8 @@ public class FestivalSearchService {
     private final ObjectMapper objectMapper;
 
     private static final String FESTIVAL_SERVICE_PATH = "/B551011/KorService2/searchFestival2";
-    private static final int FESTIVAL_SEARCH_LIMIT = 30;
-    private static final int FESTIVAL_TOTAL_LIMIT = 30;
+    private static final int FESTIVAL_SEARCH_LIMIT =100;
+    private static final int FESTIVAL_TOTAL_LIMIT = 100;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     @Value("${api.tour.service-key}")

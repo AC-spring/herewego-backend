@@ -35,8 +35,8 @@ public class KeywordTourSearchService {
     // --------------------------------------------------------------------------------
     // 상 수 (기존 searchKeyword2 설정 유지)
     // --------------------------------------------------------------------------------
-    private static final int KEYWORD_SEARCH_LIMIT = 30;
-    private static final int KEYWORD_TOTAL_LIMIT = 30;
+    private static final int KEYWORD_SEARCH_LIMIT = 100;
+    private static final int KEYWORD_TOTAL_LIMIT = 100;
     private static final String KEYWORD_SERVICE_PATH = "/B551011/KorService2/searchKeyword2";
 
     @Value("${api.tour.service-key}")
