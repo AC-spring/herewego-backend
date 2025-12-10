@@ -3,6 +3,7 @@ package com.example.webserver.domain.user.Entity;
 import lombok.*;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import lombok.AccessLevel;
@@ -79,11 +80,21 @@ public class User implements UserDetails {
     // --- Spring Security UserDetails 구현 ---
 
     /** 사용자에게 부여된 권한(ROLE) 목록을 반환합니다. */
+
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // isAdmin 값에 따라 ROLE_ADMIN 또는 ROLE_USER를 부여
-        String role = this.isAdmin ? "ROLE_ADMIN" : "ROLE_USER";
-        return List.of(new SimpleGrantedAuthority(role));
+        List<GrantedAuthority> authorities = new ArrayList<>();
+
+        // 1. 모든 로그인한 사용자는 기본적으로 "ROLE_USER" 권한을 가짐
+        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+
+        // 2. [핵심] DB의 admin 컬럼이 true이면 "ROLE_ADMIN" 권한을 추가로 부여
+        if (this.isAdmin) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        }
+
+        return authorities;
     }
 
     @Override
