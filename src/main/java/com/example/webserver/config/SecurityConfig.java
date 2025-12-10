@@ -51,6 +51,7 @@ public class SecurityConfig {
                         // 2. 추가: 새로운 축제 검색 API (GET 요청) 허용
                         .requestMatchers(HttpMethod.GET, "/api/v1/festival/**").permitAll()
 
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/admin/delete-user/**").hasRole("ADMIN")
                         // 나머지 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
