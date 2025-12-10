@@ -1,7 +1,7 @@
 package com.example.webserver.auth.controller;
 
-import com.example.webserver.dto.response.UserResponseDto;
-import com.example.webserver.service.UserService;
+import com.example.webserver.auth.dto.UserResponseDto;
+import com.example.webserver.auth.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
