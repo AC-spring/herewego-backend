@@ -88,13 +88,9 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        List<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
-
-        if (this.isAdmin) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-        }
-        return authorities;
+        // isAdmin 값에 따라 ROLE_ADMIN 또는 ROLE_USER를 부여
+        String role = this.isAdmin ? "ROLE_ADMIN" : "ROLE_USER";
+        return List.of(new SimpleGrantedAuthority(role));
     }
 
     @Override
