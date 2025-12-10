@@ -3,10 +3,10 @@ package com.example.webserver.service;
 import com.example.webserver.dto.request.ReviewBoardRequestDto;
 import com.example.webserver.dto.response.ReviewBoardResponseDto;
 import com.example.webserver.entity.ReviewBoard;
-import com.example.webserver.entity.User;
+import com.example.webserver.domain.user.Entity.User;
 import com.example.webserver.repository.ReviewBoardRepository;
-import com.example.webserver.repository.UserRepository;
-import com.example.webserver.exception.AuthorizationException; // ★ 추가: Custom Exception Import
+import com.example.webserver.domain.user.Repository.UserRepository;
+import com.example.webserver.global.error.AuthorizationException; // ★ 추가: Custom Exception Import
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

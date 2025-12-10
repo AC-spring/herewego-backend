@@ -1,5 +1,6 @@
 package com.example.webserver.entity;
 
+import com.example.webserver.domain.user.Entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

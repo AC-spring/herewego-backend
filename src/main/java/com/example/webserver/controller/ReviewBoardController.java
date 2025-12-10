@@ -2,7 +2,7 @@ package com.example.webserver.controller;
 
 import com.example.webserver.dto.request.ReviewBoardRequestDto;
 import com.example.webserver.dto.response.ReviewBoardResponseDto;
-import com.example.webserver.dto.ResponseWrapperDto; // 메시지와 데이터를 래핑하는 DTO
+import com.example.webserver.global.common.ResponseWrapperDto; // 메시지와 데이터를 래핑하는 DTO
 import com.example.webserver.service.ReviewBoardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
