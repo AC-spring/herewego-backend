@@ -1,0 +1,34 @@
+package com.example.webserver.review.dto.response;
+
+import com.example.webserver.review.entity.ReviewBoard;
+import lombok.Builder;
+import lombok.Getter;
+import java.time.LocalDateTime;
+
+@Getter
+@Builder
+public class ReviewBoardResponseDto {
+    private Long id;
+    private String title;
+    private String content;
+    private String nickname;
+    private int viewCount;
+    private String region;
+    private String spotContentId;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    public static ReviewBoardResponseDto of(ReviewBoard board) {
+        return ReviewBoardResponseDto.builder()
+                .id(board.getId())
+                .title(board.getTitle())
+                .content(board.getContent())
+                .nickname(board.getUser().getNickname())
+                .viewCount(board.getViewCount())
+                .region(board.getRegion())
+                .spotContentId(board.getSpotContentId())
+                .createdAt(board.getCreatedAt())
+                .updatedAt(board.getUpdatedAt())
+                .build();
+    }
+}

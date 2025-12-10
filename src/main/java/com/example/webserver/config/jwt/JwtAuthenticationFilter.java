@@ -1,6 +1,6 @@
 package com.example.webserver.config.jwt;
 
-import com.example.webserver.service.CustomUserDetailsService;
+import com.example.webserver.auth.service.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

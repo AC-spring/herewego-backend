@@ -1,6 +1,6 @@
 package com.example.webserver.config.jwt;
 
-import com.example.webserver.dto.TokenDto;
+import com.example.webserver.auth.dto.TokenDto;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
