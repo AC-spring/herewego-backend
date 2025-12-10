@@ -1,6 +1,6 @@
-package com.example.webserver.search.controller;
+package com.example.webserver.tour.controller;
 
-import com.example.webserver.search.service.KeywordTourSearchService;
+import com.example.webserver.tour.service.KeywordTourSearchService;
 import com.example.webserver.tour.dto.TourItemDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,6 +1,6 @@
 package com.example.webserver.tour.controller;
 
-import com.example.webserver.tour.api.TourApiService;
+import com.example.webserver.tour.service.TourApiService;
 import com.example.webserver.tour.dto.TourItemDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

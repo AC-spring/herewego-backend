@@ -1,4 +1,4 @@
-package com.example.webserver.tour.api;
+package com.example.webserver.tour.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
