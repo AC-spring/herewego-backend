@@ -58,21 +58,5 @@ public class UserController {
 
     // --- 관리자 기능 (ROLE_ADMIN Required) ---
 
-    // GET /api/v1/user/users : 모든 사용자 정보 조회
-    @GetMapping("/users")
-    @PreAuthorize("hasRole('ADMIN')") // ROLE_ADMIN만 접근 허용
-    public ResponseEntity<List<UserResponseDto>> getAllUsers() {
-        List<UserResponseDto> users = userService.getAllUsers();
-        return ResponseEntity.ok(users);
-    }
 
-
-
-    // DELETE /api/v1/user/admin/delete-user/{userId} : 강제 탈퇴
-    @DeleteMapping("/admin/delete-user/{userId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long userId) {
-        userService.deleteUserByAdmin(userId);
-        return ResponseEntity.noContent().build();
-    }
 }
