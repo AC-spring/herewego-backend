@@ -1,5 +1,6 @@
 package com.example.webserver.travel.entity;
 
+import com.example.webserver.auth.entity.User; // ✨ User 엔티티 임포트 필수!
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,10 +25,14 @@ public class Trip {
     private LocalDate startDate;
     private LocalDate endDate;
 
+    // ✨ [중요] 작성자(User)와 연결하는 필드 추가
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id") // DB에 user_id 컬럼이 생깁니다.
+    private User user;
+
     // 양방향 연관관계 설정
-    // orphanRemoval = true: 리스트에서 제거되면 DB에서도 삭제됨 (Update 로직 핵심)
     @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("dayNumber ASC, orderIndex ASC") // 조회 시 자동으로 순서 정렬
+    @OrderBy("dayNumber ASC, orderIndex ASC")
     private List<Schedule> schedules = new ArrayList<>();
 
     // 생성자 메서드
